@@ -359,7 +359,8 @@ if "modo" in st.session_state and seleccion:
     # ================================
     if st.session_state["modo"] == "historial":
         try:
-            historial = pd.read_excel(HISTORIAL_PATH, engine="openpyxl")
+            #historial = pd.read_excel(HISTORIAL_PATH, engine="openpyxl")
+            historial = sharepoint_read_historial_df(st.secrets)
 
             historial.columns = (
                 historial.columns.astype(str)
@@ -572,7 +573,7 @@ if "modo" in st.session_state and seleccion:
                 # responsable ya viene del bloque de tarjeta, pero por seguridad:
                 responsable_actual = resp_sel
 
-                nuevo = {
+                nuevo_sharepoint = {
                     "codigo": codigo,
                     "nombre": nombre_ue,
                     "año": año,
@@ -591,11 +592,11 @@ if "modo" in st.session_state and seleccion:
                     "fecha_it": str(fecha_it),
                     "numero_it": numero_it,
                     "fecha_oficio": str(fecha_oficio),
-                    "numero_oficio": numero_oficio
+                    "numero_oficio": numero_oficio,
                 }
 
                 try:
-                    guardar_en_historial_excel(nuevo, HISTORIAL_PATH)
+                    sharepoint_append_row_to_excel(st.secrets, nuevo_sharepoint)
                     st.success("✅ Registro guardado en el historial.")
                     st.session_state["modo"] = "historial"
                     st.rerun()
