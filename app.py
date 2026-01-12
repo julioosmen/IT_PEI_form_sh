@@ -4,7 +4,9 @@ import pandas as pd
 import os
 import base64
 from datetime import datetime
-#from supabase import create_client
+from textwrap import dedent
+from sharepoint_excel import read_excel_sheet_from_sharepoint, append_row_to_sharepoint_excel, norm_key
+
 
 def guardar_en_historial_excel(nuevo: dict, path: str):
     """
@@ -43,7 +45,7 @@ def guardar_en_historial_excel(nuevo: dict, path: str):
 
 
 # =====================================
-# ✅ PARTE INTEGRADA (colocar al inicio)
+# ✅ PARTE INTEGRADA
 # =====================================
 HISTORIAL_PATH = "data/historial_it_pei.xlsx"
 
@@ -65,7 +67,7 @@ FORM_DEFAULTS = {
     "numero_oficio": "",
 }
 
-FORM_STATE_KEY = "pei_form_data"  # ✅ NUEVA KEY (ya no choca con st.form)
+FORM_STATE_KEY = "pei_form_data"
 
 def init_form_state():
     st.session_state.setdefault(FORM_STATE_KEY, FORM_DEFAULTS.copy())
@@ -214,28 +216,25 @@ responsables = sorted([r for r in df_ue["Responsable_Institucional"].unique() if
 def get_image_base64(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
-        
+
 def render_header():
-       
     logo_base64 = get_image_base64("logo.png")
 
-    st.markdown(
-        f"""
-        <div style="text-align:center; margin-top:10px;">
-            <img src="data:image/png;base64,{logo_base64}" width="220" style="display:block; margin:0 auto;">
-            <h1 style="
-                margin-top:0px;
-                margin-bottom:10px;
-                font-size:2.2rem;
-            ">
-                Registro de IT del Plan Estratégico Institucional (PEI)
-            </h1>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    html = f"""
+<div style="display:flex; align-items:center; gap:16px; margin-top:-10px; padding:6px 0;">
+  <img src="data:image/png;base64,{logo_base64}" width="140" style="display:block;">
+  <h1 style="margin:0; font-size:2.1rem; font-weight:600; line-height:1.2;">
+    Registro de IT del Plan Estratégico Institucional (PEI)
+  </h1>
+</div>
+"""
+
+    st.markdown(dedent(html), unsafe_allow_html=True)
+
 
 render_header()
+
+#st.markdown("<h1 style='color:red'>PRUEBA</h1>", unsafe_allow_html=True)
 
 st.markdown(
     """
@@ -328,21 +327,18 @@ if seleccion:
                 font-size: 14px;
                 color: #333;
             ">
-                    Información del pliego seleccionado<br>
-
-                    Sector: {sector}
-                    Nivel de gobierno: {nivel_gob}
-                    Responsable institucional: {responsable}
+                <div><strong>Sector:</strong> {sector}</div>
+                <div><strong>Nivel de gobierno:</strong> {nivel_gob}</div>
+                <div><strong>Responsable institucional:</strong> {responsable}</div>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-        st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("📌 Historial PEI"):
+        if st.button("📂 Historial PEI"):
             st.session_state["modo"] = "historial"
 
     with col2:
@@ -362,10 +358,9 @@ if "modo" in st.session_state and seleccion:
     # MODO: HISTORIAL
     # ================================
     if st.session_state["modo"] == "historial":
-        st.subheader("📌 Historial PEI")
-
         try:
-            historial = pd.read_excel(HISTORIAL_PATH, engine="openpyxl")
+            #historial = pd.read_excel(HISTORIAL_PATH, engine="openpyxl")
+            historial = sharepoint_read_historial_df(st.secrets)
 
             historial.columns = (
                 historial.columns.astype(str)
@@ -578,7 +573,7 @@ if "modo" in st.session_state and seleccion:
                 # responsable ya viene del bloque de tarjeta, pero por seguridad:
                 responsable_actual = resp_sel
 
-                nuevo = {
+                nuevo_sharepoint = {
                     "codigo": codigo,
                     "nombre": nombre_ue,
                     "año": año,
@@ -597,11 +592,11 @@ if "modo" in st.session_state and seleccion:
                     "fecha_it": str(fecha_it),
                     "numero_it": numero_it,
                     "fecha_oficio": str(fecha_oficio),
-                    "numero_oficio": numero_oficio
+                    "numero_oficio": numero_oficio,
                 }
 
                 try:
-                    guardar_en_historial_excel(nuevo, HISTORIAL_PATH)
+                    sharepoint_append_row_to_excel(st.secrets, nuevo_sharepoint)
                     st.success("✅ Registro guardado en el historial.")
                     st.session_state["modo"] = "historial"
                     st.rerun()
