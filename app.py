@@ -5,8 +5,8 @@ import os
 import base64
 from datetime import datetime
 from textwrap import dedent
+from sharepoint_excel import read_excel_sheet_from_sharepoint, append_row_to_sharepoint_excel, norm_key
 
-#from supabase import create_client
 
 def guardar_en_historial_excel(nuevo: dict, path: str):
     """
