@@ -361,7 +361,7 @@ if "modo" in st.session_state and seleccion:
     if st.session_state["modo"] == "historial":
         try:
             # 1) Leer historial desde SharePoint
-            historial_raw = sharepoint_read_historial_df(st.secrets)
+            historial_raw = read_excel_sheet_from_sharepoint(st.secrets)
     
             # 2) Adaptar columnas SharePoint -> estándar de la app
             historial = adaptar_historial_sharepoint(historial_raw)
