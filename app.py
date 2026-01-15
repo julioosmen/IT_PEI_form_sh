@@ -6,6 +6,7 @@ import base64
 from datetime import datetime
 from textwrap import dedent
 from sharepoint_excel import read_excel_sheet_from_sharepoint, append_row_to_sharepoint_excel, norm_key
+from adapters.historial_sharepoint import adaptar_historial_sharepoint
 
 
 def guardar_en_historial_excel(nuevo: dict, path: str):
@@ -359,64 +360,74 @@ if "modo" in st.session_state and seleccion:
     # ================================
     if st.session_state["modo"] == "historial":
         try:
-            #historial = pd.read_excel(HISTORIAL_PATH, engine="openpyxl")
-            historial = sharepoint_read_historial_df(st.secrets)
-
-            historial.columns = (
-                historial.columns.astype(str)
-                .str.strip()
-                .str.lower()
-                .str.replace(" ", "_")
-            )
-
+            # 1) Leer historial desde SharePoint
+            historial_raw = sharepoint_read_historial_df(st.secrets)
+    
+            # 2) Adaptar columnas SharePoint -> estándar de la app
+            historial = adaptar_historial_sharepoint(historial_raw)
+    
+            # 3) Validación mínima
             if "codigo" not in historial.columns:
-                st.error("❌ El historial no tiene la columna 'codigo'. Revisa el Excel.")
+                st.error("❌ El historial no tiene la columna clave 'codigo' (Id_UE).")
                 st.write("Columnas detectadas:", historial.columns.tolist())
                 st.stop()
-
+    
+            # 4) Normalizador de código (robusto)
             def normalizar_codigo(x):
-                if pd.isna(x):
+                if pd.isna(x) or x is None:
                     return ""
                 try:
                     return str(int(float(x)))
                 except Exception:
                     return str(x).strip()
-
-            historial["codigo_ue_norm"] = historial["codigo"].apply(normalizar_codigo)
-
-        except FileNotFoundError:
-            st.error(f"No se encontró el archivo: {HISTORIAL_PATH}")
-            st.stop()
+    
         except Exception as e:
-            st.error(f"Error al leer el historial: {e}")
+            st.error(f"❌ Error al leer el historial desde SharePoint: {e}")
             st.stop()
-
+    
+        # 5) Filtrar historial por el código seleccionado (SIN crear columna extra)
         codigo_norm = normalizar_codigo(codigo)
-
-        df_historial = historial[historial["codigo_ue_norm"] == codigo_norm].copy()
-
+    
+        df_historial = historial[
+            historial["codigo"].apply(normalizar_codigo) == codigo_norm
+        ].copy()
+    
         st.write("Filas encontradas para este pliego:", len(df_historial))
-
+    
         if df_historial.empty:
             st.info("No existe historial para este pliego (según la clave de comparación).")
+    
         else:
+            # 6) Preparar fecha para identificar último registro
             if "fecha_recepcion" in df_historial.columns:
                 df_historial["fecha_recepcion"] = pd.to_datetime(
                     df_historial["fecha_recepcion"], errors="coerce"
                 )
-
-            st.dataframe(df_historial.tail(5), use_container_width=True, hide_index=True)
-
+    
+            # 7) Mostrar últimas filas
+            st.dataframe(
+                df_historial.tail(5),
+                use_container_width=True,
+                hide_index=True
+            )
+    
+            # 8) Detectar último registro
             if "fecha_recepcion" in df_historial.columns:
-                ultimo = df_historial.sort_values("fecha_recepcion", ascending=False).iloc[0]
+                ultimo = df_historial.sort_values(
+                    "fecha_recepcion", ascending=False
+                ).iloc[0]
             else:
                 ultimo = df_historial.iloc[-1]
-
+    
             st.success("Último registro encontrado.")
-
+    
+            # 9) Cargar último registro al formulario
             colx, coly = st.columns([1, 2])
             with colx:
-                if st.button("⬇️ Cargar último registro disponible al formulario", type="primary"):
+                if st.button(
+                    "⬇️ Cargar último registro disponible al formulario",
+                    type="primary"
+                ):
                     init_form_state()
                     set_form_state_from_row(ultimo)
                     st.session_state["modo"] = "nuevo"
