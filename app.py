@@ -284,10 +284,27 @@ if not resp_sel:
 # ================================
 df_ue_filtrado = df_ue[df_ue["Responsable_Institucional"] == resp_sel].copy()
 
+# Validar columna Estado (si no existe, no podemos aplicar el filtro)
+if "Estado" not in df_ue_filtrado.columns:
+    st.warning("⚠️ No existe la columna 'Estado' en unidades_ejecutoras.xlsx. No se aplicará el filtro 'En proceso'.")
+    df_ue_filtrado["Estado"] = ""
+
+# UI en dos columnas: selectbox + checkbox al costado
+col_sel, col_chk = st.columns([4, 1])
+
+with col_chk:
+    solo_en_proceso = st.checkbox("Solo En proceso", value=False)
+
+# Aplicar filtro adicional si está activado
+if solo_en_proceso:
+    # Normalización mínima para evitar fallas por espacios o mayúsculas
+    estado_norm = df_ue_filtrado["Estado"].fillna("").astype(str).str.strip().str.upper()
+    df_ue_filtrado = df_ue_filtrado[estado_norm == "EN PROCESO"].copy()
+
 st.caption(f"Unidades ejecutoras asignadas: {len(df_ue_filtrado)}")
 
 if df_ue_filtrado.empty:
-    st.warning("No hay unidades ejecutoras asociadas a este responsable.")
+    st.warning("No hay unidades ejecutoras para este responsable con el filtro aplicado.")
     st.stop()
 
 # Crear opciones combinadas para búsqueda (solo del filtrado)
@@ -296,12 +313,14 @@ opciones = [
     for _, row in df_ue_filtrado.iterrows()
 ]
 
-seleccion = st.selectbox(
-    "Escriba o seleccione el código o nombre del pliego",
-    opciones,
-    index=None,
-    placeholder="Escribe el código o nombre..."
-)
+with col_sel:
+    seleccion = st.selectbox(
+        "Escriba o seleccione el código o nombre del pliego",
+        opciones,
+        index=None,
+        placeholder="Escribe el código o nombre..."
+    )
+
 
 # ================================
 # Opciones
