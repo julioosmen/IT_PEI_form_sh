@@ -293,7 +293,7 @@ if "Estado" not in df_ue_filtrado.columns:
 col_sel, col_chk = st.columns([4, 1])
 
 with col_chk:
-    solo_en_proceso = st.checkbox("Solo En proceso", value=False)
+    solo_en_proceso = st.checkbox("En proceso", value=False)
 
 # Aplicar filtro adicional si está activado
 if solo_en_proceso:
