@@ -14,7 +14,6 @@ from sharepoint_excel import (
 
 from adapters.historial_sharepoint import (
     adaptar_historial_sharepoint,
-    map_row_to_excel_headers,
 )
 
 
@@ -580,7 +579,6 @@ if "modo" in st.session_state and seleccion:
                 }
 
                 try:
-                    row_excel = map_row_to_excel_headers(nuevo_sharepoint)
                     append_row_to_sharepoint_excel(st.secrets, nuevo_sharepoint)
                     st.success("✅ Registro guardado en el historial.")
                     st.session_state["modo"] = "historial"
