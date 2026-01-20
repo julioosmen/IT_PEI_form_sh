@@ -88,26 +88,77 @@ def read_excel_sheet_from_sharepoint(secrets, sheet_name: str | None = None) -> 
     return pd.read_excel(io.BytesIO(content), sheet_name=sn, engine="openpyxl")
 
 
-def append_row_to_sharepoint_excel(secrets, row_by_excel_header: dict) -> None:
+def append_row_to_sharepoint_excel(secrets, row_by_app_key: dict) -> None:
     """
-    Agrega una fila a una TABLA de Excel en SharePoint usando Microsoft Graph Excel API
-    (evita PUT /content => reduce 423 Locked).
-    row_by_excel_header: dict con claves como encabezados reales (o equivalentes).
+    Inserta una fila en la TABLA del Excel (SharePoint) usando headers reales.
+    Acepta claves técnicas del app (snake_case) y las traduce a los headers de Excel.
     """
     sp = secrets["sharepoint"]
-    table_name = sp.get("table_name")
-    if not table_name:
-        raise ValueError("Falta secrets['sharepoint'].table_name (nombre de la tabla de Excel).")
-
     token = _graph_get_token(sp)
     site_id = _graph_get_site_id(token, sp["site_hostname"], sp["site_path"])
     item_id = _graph_get_drive_item_id(token, site_id, sp["file_path"])
 
+    table_name = sp.get("table_name")
+    if not table_name:
+        raise ValueError("Falta secrets['sharepoint'].table_name")
+
+    # 1) Headers reales de la tabla (en orden)
     table_headers = _excel_get_table_header_names(token, site_id, item_id, table_name)
     if not table_headers:
-        raise RuntimeError(f"No se pudieron leer columnas de la tabla '{table_name}'. Verifica que exista.")
+        raise RuntimeError(f"No se pudieron leer columnas de la tabla '{table_name}'.")
 
-    data_norm = {norm_key(k): v for k, v in row_by_excel_header.items()}
-    row_values = [data_norm.get(norm_key(h), "") for h in table_headers]
+    # 2) Normaliza headers reales del Excel
+    excel_norm_headers = [norm_key(h) for h in table_headers]
 
-    _excel_table_add_row(token, site_id, item_id, table_name, row_values)
+    # 3) Alias: claves técnicas del app -> claves normalizadas del Excel
+    #    (Esto resuelve fecha_recepcion vs fecha_de_recepcion, etc.)
+    APPKEY_TO_EXCELNORM = {
+        "codigo": "id_ue",
+        "nombre": "nombre_unidad_ejecutora",
+        "año": "ano",              # norm_key("Año") => "ano"
+        "anio": "ano",
+        "ng1": "n_g_1",
+        "ng2": "n_g_2",
+
+        "fecha_recepcion": "fecha_de_recepcion",
+        "periodo": "periodo_pei",
+        "vigencia": "vigencia",
+        "tipo_pei": "tipo_de_pei",
+        "estado": "estado",
+        "responsable_institucional": "responsable_institucional",
+        "cantidad_revisiones": "cantidad_de_revisiones",
+        "fecha_derivacion": "fecha_de_derivacion",
+        "etapa_revision": "etapas_de_revision",
+        "comentario": "comentario_adicional_emisor_de_i_t",
+        "articulacion": "articulacion",
+        "expediente": "expediente",
+        "fecha_it": "fecha_de_i_t",
+        "numero_it": "numero_de_i_t",
+        "fecha_oficio": "fecha_oficio",
+        "numero_oficio": "numero_oficio",
+
+        "id_sector": "id_sector",
+        "nombre_sector": "nombre_sector",
+        "id_pliego": "id_pliego",
+        "nombre_pliego": "nombre_pliego",
+
+        "id_departamento": "id_departamento",
+        "nombre_departamento": "nombre_departamento",
+        "id_provincia": "id_provincia",
+        "nombre_provincia": "nombre_provincia",
+        "id_4distrito": "id_4distrito",
+        "nombre_distrito": "nombre_distrito",
+    }
+
+    # 4) Construye diccionario normalizado con alias
+    data_norm = {}
+    for k, v in row_by_app_key.items():
+        k0 = norm_key(k)  # por si acaso llega con espacios/tildes
+        excel_norm = APPKEY_TO_EXCELNORM.get(k0, k0)  # si no hay alias, usa k0
+        data_norm[excel_norm] = v
+
+    # 5) Arma la fila en el mismo orden de la tabla
+    new_row = [data_norm.get(h_norm, "") for h_norm in excel_norm_headers]
+
+    # 6) Inserta fila por Graph Excel API
+    _excel_table_add_row(token, site_id, item_id, table_name, new_row)
