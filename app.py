@@ -10,6 +10,7 @@ import pandas as pd
 from sharepoint_excel import (
     read_excel_sheet_from_sharepoint,
     append_row_to_sharepoint_excel,
+    norm_key,
 )
 
 from adapters.historial_sharepoint import (
