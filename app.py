@@ -17,6 +17,9 @@ from adapters.historial_sharepoint import (
     adaptar_historial_sharepoint,
 )
 
+from validators import (
+    validar_formulario,
+)
 
 # =====================================
 # ✅ PARTE INTEGRADA
@@ -579,6 +582,12 @@ if "modo" in st.session_state and seleccion:
                     "numero_oficio": numero_oficio,
                 }
 
+                errores = validar_formulario(nuevo_sharepoint)
+                if errores:
+                    for e in errores:
+                        st.error(f"❌ {e}")
+                    st.stop()  # ⛔ corta y NO guarda        
+                
                 try:
                     append_row_to_sharepoint_excel(st.secrets, nuevo_sharepoint)
                     st.success("✅ Registro guardado en el historial.")
