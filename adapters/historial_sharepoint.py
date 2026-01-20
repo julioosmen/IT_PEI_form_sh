@@ -1,25 +1,36 @@
 import re
 import pandas as pd
 
-MAP_HIST_SP_TO_STD = {
-    "Id_UE": "codigo",
-    "Año": "año",
-    "Responsable Institucional": "responsable_institucional",
-    "Fecha de recepción": "fecha_recepcion",
-    "Periodo PEI": "periodo",
-    "Vigencia": "vigencia",
-    "Tipo de PEI": "tipo_pei",
-    "Estado": "estado",
-    "Cantidad de revisiones": "cantidad_revisiones",
-    "Fecha de derivación": "fecha_derivacion",
-    "Etapas de revisión": "etapa_revision",
-    "Comentario adicional/ Emisor de I.T": "comentario",
-    "Articulación": "articulacion",
-    "Expediente": "expediente",
-    "Fecha de I.T": "fecha_it",
-    "Número de I.T": "numero_it",
-    "Fecha Oficio": "fecha_oficio",
-    "Número Oficio": "numero_oficio",
+APP_TO_EXCEL_HEADERS = {
+    # ---- Identificación básica (tabla) ----
+    "año": "Año",
+    "ng1": "N G 1",
+    "ng2": "N G 2",
+    "fecha_recepcion": "Fecha de recepción",
+    "periodo": "Periodo PEI ",
+    "vigencia": "Vigencia",
+    "tipo_pei": "Tipo de PEI",
+    "estado": "Estado ",
+    "responsable_institucional": "Responsable Institucional ",
+    "cantidad_revisiones": "Cantidad de revisiones",
+    "fecha_derivacion": "Fecha de derivación ",
+    "etapa_revision": "Etapas de revisión",
+    "comentario": "Comentario adicional/ Emisor de I.T",
+    "articulacion": "Articulación ",
+    "expediente": "Expediente ",
+    "fecha_it": "Fecha de I.T ",
+    "numero_it": "Número de I.T",
+
+    # ---- Oficio ----
+    "fecha_oficio": "Fecha Oficio",
+    "numero_oficio": "Número Oficio",
+
+    # ---- IDs / nombres administrativos ----
+    "id_sector": "Id_Sector",
+    "nombre_sector": "nombre_sector",
+    "id_pliego": "Id_Pliego",
+    "nombre_pliego": "nombre_pliego",
+    "codigo": "Id_UE",  # tu 'codigo' del app corresponde a Id_UE
 }
 
 def adaptar_historial_sharepoint(df_raw: pd.DataFrame) -> pd.DataFrame:
@@ -31,7 +42,7 @@ def adaptar_historial_sharepoint(df_raw: pd.DataFrame) -> pd.DataFrame:
         return c
 
     df.columns = [_norm_col(c) for c in df.columns]
-    df = df.rename(columns=MAP_HIST_SP_TO_STD)
+    df = df.rename(columns=APP_TO_EXCEL_HEADERS)
 
     # convención interna
     df.columns = (
