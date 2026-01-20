@@ -6,7 +6,7 @@ import base64
 from datetime import datetime
 from textwrap import dedent
 from sharepoint_excel import read_excel_sheet_from_sharepoint, append_row_to_sharepoint_excel, norm_key
-from adapters.historial_sharepoint import adaptar_historial_sharepoint
+from adapters.historial_sharepoint import map_row_to_excel_headers, adaptar_historial_sharepoint 
 
 # =====================================
 # ✅ PARTE INTEGRADA
