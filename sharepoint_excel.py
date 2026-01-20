@@ -6,13 +6,11 @@ import msal
 import pandas as pd
 from openpyxl import load_workbook
 
-
 def norm_key(s: str) -> str:
     s = "" if s is None else str(s).strip().lower()
     s = "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
     s = re.sub(r"[^a-z0-9]+", "_", s)
     return s.strip("_")
-
 
 def _graph_get_token(sp: dict) -> str:
     authority = f"https://login.microsoftonline.com/{sp['tenant_id']}"
@@ -26,13 +24,41 @@ def _graph_get_token(sp: dict) -> str:
         raise RuntimeError(f"No se pudo obtener token Graph: {result}")
     return result["access_token"]
 
-
 def _graph_get_site_id(token: str, site_hostname: str, site_path: str) -> str:
     url = f"https://graph.microsoft.com/v1.0/sites/{site_hostname}:{site_path}"
     r = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=60)
     r.raise_for_status()
     return r.json()["id"]
 
+def _graph_get_drive_item_id(token: str, site_id: str, file_path: str) -> str:
+    # Obtiene metadata del item (incluye id)
+    url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/root:{file_path}"
+    r = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=60)
+    r.raise_for_status()
+    return r.json()["id"]
+
+def _excel_get_table_header_names(token: str, site_id: str, item_id: str, table_name: str) -> list[str]:
+    # Devuelve los nombres de columnas de la tabla (en orden)
+    url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/items/{item_id}/workbook/tables/{table_name}/columns"
+    r = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=60)
+    r.raise_for_status()
+    cols = r.json().get("value", [])
+    # Cada columna trae { "name": "..." }
+    return [c.get("name", "").strip() for c in cols]
+
+def _excel_table_add_row(token: str, site_id: str, item_id: str, table_name: str, row_values_in_order: list) -> None:
+    url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/items/{item_id}/workbook/tables/{table_name}/rows/add"
+    body = {"values": [row_values_in_order]}
+    r = requests.post(
+        url,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        },
+        json=body,
+        timeout=60,
+    )
+    r.raise_for_status()
 
 def _graph_download_file(token: str, site_id: str, file_path: str) -> bytes:
     url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/root:{file_path}:/content"
@@ -62,32 +88,26 @@ def read_excel_sheet_from_sharepoint(secrets, sheet_name: str | None = None) -> 
     return pd.read_excel(io.BytesIO(content), sheet_name=sn, engine="openpyxl")
 
 
-def append_row_to_sharepoint_excel(secrets, row_by_excel_header: dict, sheet_name: str | None = None) -> None:
+def append_row_to_sharepoint_excel(secrets, row_by_excel_header: dict) -> None:
     """
-    Descarga el Excel, agrega una fila al final de la hoja indicada y sube el archivo actualizado.
-    row_by_excel_header: dict con claves (encabezados reales) o equivalentes; se normaliza con norm_key.
+    Agrega una fila a una TABLA de Excel en SharePoint usando Microsoft Graph Excel API
+    (evita PUT /content => reduce 423 Locked).
+    row_by_excel_header: dict con claves como encabezados reales (o equivalentes).
     """
     sp = secrets["sharepoint"]
+    table_name = sp.get("table_name")
+    if not table_name:
+        raise ValueError("Falta secrets['sharepoint'].table_name (nombre de la tabla de Excel).")
+
     token = _graph_get_token(sp)
     site_id = _graph_get_site_id(token, sp["site_hostname"], sp["site_path"])
-    content = _graph_download_file(token, site_id, sp["file_path"])
+    item_id = _graph_get_drive_item_id(token, site_id, sp["file_path"])
 
-    wb = load_workbook(io.BytesIO(content))
-    sn = sheet_name or sp.get("sheet_name")
-    if not sn:
-        raise ValueError("No se indicó sheet_name y secrets['sharepoint'].sheet_name no existe.")
-    if sn not in wb.sheetnames:
-        raise RuntimeError(f"No existe la hoja '{sn}' en el archivo SharePoint.")
+    table_headers = _excel_get_table_header_names(token, site_id, item_id, table_name)
+    if not table_headers:
+        raise RuntimeError(f"No se pudieron leer columnas de la tabla '{table_name}'. Verifica que exista.")
 
-    ws = wb[sn]
-
-    headers = [c.value for c in ws[1]]
-    headers = [str(h).strip() if h is not None else "" for h in headers]
     data_norm = {norm_key(k): v for k, v in row_by_excel_header.items()}
+    row_values = [data_norm.get(norm_key(h), "") for h in table_headers]
 
-    new_row = [data_norm.get(norm_key(h), "") for h in headers]
-    ws.append(new_row)
-
-    out = io.BytesIO()
-    wb.save(out)
-    _graph_upload_file(token, site_id, sp["file_path"], out.getvalue())
+    _excel_table_add_row(token, site_id, item_id, table_name, row_values)
