@@ -332,7 +332,10 @@ if "modo" in st.session_state and seleccion:
         try:
             # 1) Leer historial desde SharePoint
             historial_raw = read_excel_sheet_from_sharepoint(st.secrets)
-    
+            
+            st.write("Columnas RAW (SharePoint):", historial_raw.columns.tolist())
+            st.write("Columnas RAW normalizadas:", [norm_key(c) for c in historial_raw.columns.astype(str)])
+
             # 2) Adaptar columnas SharePoint -> estándar de la app
             historial = adaptar_historial_sharepoint(historial_raw)
     
