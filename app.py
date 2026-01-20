@@ -605,7 +605,7 @@ if "modo" in st.session_state and seleccion:
                 }
 
                 try:
-                    sharepoint_append_row_to_excel(st.secrets, nuevo_sharepoint)
+                    append_row_to_sharepoint_excel(st.secrets, nuevo_sharepoint)
                     st.success("✅ Registro guardado en el historial.")
                     st.session_state["modo"] = "historial"
                     st.rerun()
