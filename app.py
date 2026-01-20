@@ -413,7 +413,7 @@ if "modo" in st.session_state and seleccion:
     # MODO: NUEVO
     # ================================
     elif st.session_state["modo"] == "nuevo":
-        st.subheader("📝 Crear nuevo registro PEI")
+        #st.subheader("📝 Crear nuevo registro PEI")
 
         init_form_state()
         form = st.session_state[FORM_STATE_KEY]
