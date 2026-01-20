@@ -74,16 +74,3 @@ def adaptar_historial_sharepoint(df: pd.DataFrame) -> pd.DataFrame:
     df["codigo"] = df["codigo"].astype(str).str.strip()
 
     return df
-
-def map_row_to_excel_headers(app_row: dict) -> dict:
-    """
-    Convierte un dict con claves técnicas del app
-    a un dict con encabezados EXACTOS de la tabla Excel (SharePoint).
-    """
-    out = {}
-    for k, v in app_row.items():
-        excel_header = EXCEL_NORM_TO_APP.get(k)
-        if excel_header:
-            out[excel_header] = v
-
-    return out
