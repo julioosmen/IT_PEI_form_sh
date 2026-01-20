@@ -8,47 +8,9 @@ from textwrap import dedent
 from sharepoint_excel import read_excel_sheet_from_sharepoint, append_row_to_sharepoint_excel, norm_key
 from adapters.historial_sharepoint import adaptar_historial_sharepoint
 
-
-def guardar_en_historial_excel(nuevo: dict, path: str):
-    """
-    Guarda un nuevo registro en el Excel historial_it_pei.xlsx
-    - Si el archivo no existe, lo crea
-    - Si existe, agrega una nueva fila
-    """
-
-    # Normalización robusta del código
-    def normalizar_codigo(x):
-        if pd.isna(x) or x is None:
-            return ""
-        try:
-            return str(int(float(x)))   # 23.0 -> "23"
-        except Exception:
-            return str(x).strip()
-
-    # 1) Dict -> DataFrame (1 fila)
-    df_nuevo = pd.DataFrame([nuevo])
-
-    # 2) Asegurar columna normalizada
-    df_nuevo["codigo_ue_norm"] = df_nuevo["codigo"].apply(normalizar_codigo)
-
-    # 3) Crear archivo si no existe
-    if not os.path.exists(path):
-        df_nuevo.to_excel(path, index=False, engine="openpyxl")
-        return
-
-    # 4) Leer historial existente
-    df_hist = pd.read_excel(path, engine="openpyxl")
-    df_hist.columns = df_hist.columns.astype(str).str.strip()
-
-    # 5) Concatenar y sobrescribir
-    df_final = pd.concat([df_hist, df_nuevo], ignore_index=True, sort=False)
-    df_final.to_excel(path, index=False, engine="openpyxl")
-
-
 # =====================================
 # ✅ PARTE INTEGRADA
 # =====================================
-HISTORIAL_PATH = "data/historial_it_pei.xlsx"
 
 FORM_DEFAULTS = {
     "tipo_pei": "Formulado",
@@ -612,12 +574,3 @@ if "modo" in st.session_state and seleccion:
                 except Exception as e:
                     st.error(f"❌ Error al guardar en el Excel: {e}")
 
-                st.write("📄 HISTORIAL_PATH:", HISTORIAL_PATH)
-                st.write("📍 Ruta absoluta:", os.path.abspath(HISTORIAL_PATH))
-
-                if os.path.exists(HISTORIAL_PATH):
-                    st.write("✅ Existe en este entorno.")
-                    st.write("🕒 Última modificación (mtime):", datetime.fromtimestamp(os.path.getmtime(HISTORIAL_PATH)))
-                    st.write("📦 Tamaño (bytes):", os.path.getsize(HISTORIAL_PATH))
-                else:
-                    st.write("❌ No existe en este entorno.")
