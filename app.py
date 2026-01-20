@@ -526,12 +526,14 @@ if "modo" in st.session_state and seleccion:
             with colB:
                 fecha_it = st.date_input(
                     "Fecha de I.T",
-                    value=form["fecha_it"] if form["fecha_it"] else datetime.now().date()
+                    value=form.get("fecha_it"),   # None => vacío
                 )
+             
                 fecha_oficio = st.date_input(
                     "Fecha del Oficio",
-                    value=form["fecha_oficio"] if form["fecha_oficio"] else datetime.now().date()
+                    value=form.get("fecha_oficio"),  # None => vacío
                 )
+
 
             with colC:
                 numero_it = st.text_input("Número de I.T", value=form["numero_it"])
