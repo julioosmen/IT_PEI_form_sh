@@ -475,7 +475,7 @@ if "modo" in st.session_state and seleccion:
 
                 fecha_derivacion = st.date_input(
                     "Fecha de derivación",
-                    value=form["fecha_derivacion"] if form["fecha_derivacion"] else datetime.now().date()
+                    value=form.get["fecha_derivacion"],
                 )
 
             with col3:
