@@ -163,17 +163,17 @@ def set_form_state_from_row(row: pd.Series):
 # =====================================
 # 🏛️ Carga y búsqueda de unidades ejecutoras
 # =====================================
-@st.cache_data
-def cargar_unidades_ejecutoras():
-    return pd.read_excel("data/unidades_ejecutoras.xlsx", engine="openpyxl")
+#@st.cache_data
+#def cargar_unidades_ejecutoras():
+#    return pd.read_excel("data/unidades_ejecutoras.xlsx", engine="openpyxl")
+#
+#df_ue = cargar_unidades_ejecutoras()
+#df_ue["codigo"] = df_ue["codigo"].astype(str).str.strip()
+#df_ue["NG"] = df_ue["NG"].astype(str).str.strip()
 
-df_ue = cargar_unidades_ejecutoras()
-df_ue["codigo"] = df_ue["codigo"].astype(str).str.strip()
-df_ue["NG"] = df_ue["NG"].astype(str).str.strip()
-
-#df_ue_raw = read_excel_sheet_from_sharepoint(st.secrets)
+df_ue_raw = read_excel_sheet_from_sharepoint(st.secrets)
 # 2) Adaptar columnas SharePoint -> estándar de la app
-#df_ue = adaptar_historial_sharepoint(historial_raw)
+df_ue = adaptar_historial_sharepoint(df_ue_raw)
 
 # ================================
 # 1) Validar y preparar responsables
