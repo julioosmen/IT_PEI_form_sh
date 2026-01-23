@@ -257,7 +257,7 @@ if not resp_sel:
 # 2.1) Filtro opcional: solo UE con PEI "En Proceso"
 # ================================
 solo_en_proceso = st.checkbox(
-    "Mostrar solo Unidades Ejecutoras con Estado_PEI = En Proceso",
+    "Mostrar solo Unidades Ejecutoras en proceso",
     value=False,
 )
 
