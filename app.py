@@ -177,18 +177,18 @@ df_ue = adaptar_historial_sharepoint(df_ue_raw)
 # ================================
 # 1) Validar y preparar responsables
 # ================================
-if "Responsable_Institucional" not in df_ue.columns:
-    st.error("❌ Falta la columna 'Responsable_Institucional' en unidades_ejecutoras.xlsx")
+if "responsable_institucional" not in df_ue.columns:
+    st.error("❌ Falta la columna 'responsable_institucional' en unidades_ejecutoras.xlsx")
     st.stop()
 
-df_ue["Responsable_Institucional"] = (
-    df_ue["Responsable_Institucional"]
+df_ue["responsable_institucional"] = (
+    df_ue["responsable_institucional"]
     .fillna("")
     .astype(str)
     .str.strip()
 )
 
-responsables = sorted([r for r in df_ue["Responsable_Institucional"].unique() if r])
+responsables = sorted([r for r in df_ue["responsable_institucional"].unique() if r])
 
 # st.image("logo.png", width=160)
 #"st.title("Registro de IT del Plan Estratégico Institucional (PEI)")
@@ -261,7 +261,7 @@ if not resp_sel:
 # ================================
 # 3) Filtrar df_ue por responsable + Filtro 2: UE (código o nombre)
 # ================================
-df_ue_filtrado = df_ue[df_ue["Responsable_Institucional"] == resp_sel].copy() 
+df_ue_filtrado = df_ue[df_ue["responsable_institucional"] == resp_sel].copy() 
 
 st.caption(f"Unidades ejecutoras asignadas: {len(df_ue_filtrado)}") 
 
@@ -271,7 +271,7 @@ if df_ue_filtrado.empty:
 
 # Crear opciones combinadas para búsqueda (solo del filtrado) 
 opciones = [ 
-    f"{str(row['codigo']).strip()} - {str(row['nombre']).strip()} - {str(row['departamento']).strip()}" for _, row in df_ue_filtrado.iterrows() ] 
+    f"{str(row['codigo']).strip()} - {str(row['nombre']).strip()} - {str(row['nombre_departamento']).strip()}" for _, row in df_ue_filtrado.iterrows() ] 
 seleccion = st.selectbox( 
     "Escriba o seleccione el código ue o nombre de la entidad", 
     opciones, 
