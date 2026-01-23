@@ -1,6 +1,10 @@
 pandas
-streamlit
+#streamlit
 supabase
 openpyxl
 msal
 requests
+streamlit==1.32.2
+altair==5.2.0
+psycopg2-binary
+sqlalchemy
