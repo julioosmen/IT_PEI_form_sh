@@ -158,35 +158,6 @@ def set_form_state_from_row(row: pd.Series):
 
     st.session_state[FORM_STATE_KEY] = form
 
-
-# =====================================
-# 🏛️ Carga y búsqueda de unidades ejecutoras
-# =====================================
-#df_ue_raw = read_excel_sheet_from_sharepoint_ue(st.secrets)
-df_ue_raw = read_excel_sheet_from_sharepoint(
-    st.secrets,
-    sheet_name=None,
-    sheet_key_in_secrets="sheet_name_ue",
-)
-# 2) Adaptar columnas SharePoint -> estándar de la app
-df_ue = adaptar_historial_sharepoint(df_ue_raw)
-
-# ================================
-# 1) Validar y preparar responsables
-# ================================
-if "responsable_institucional" not in df_ue.columns:
-    st.error("❌ Falta la columna 'responsable_institucional' en unidades_ejecutoras.xlsx")
-    st.stop()
-
-df_ue["responsable_institucional"] = (
-    df_ue["responsable_institucional"]
-    .fillna("")
-    .astype(str)
-    .str.strip()
-)
-
-responsables = sorted([r for r in df_ue["responsable_institucional"].unique() if r])
-
 # st.image("logo.png", width=160)
 #"st.title("Registro de IT del Plan Estratégico Institucional (PEI)")
 
@@ -238,6 +209,33 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# =====================================
+# 🏛️ Carga y búsqueda de unidades ejecutoras
+# =====================================
+#df_ue_raw = read_excel_sheet_from_sharepoint_ue(st.secrets)
+df_ue_raw = read_excel_sheet_from_sharepoint(
+    st.secrets,
+    sheet_name=None,
+    sheet_key_in_secrets="sheet_name_ue",
+)
+# 2) Adaptar columnas SharePoint -> estándar de la app
+df_ue = adaptar_historial_sharepoint(df_ue_raw)
+
+# ================================
+# 1) Validar y preparar responsables
+# ================================
+if "responsable_institucional" not in df_ue.columns:
+    st.error("❌ Falta la columna 'responsable_institucional' en unidades_ejecutoras.xlsx")
+    st.stop()
+
+df_ue["responsable_institucional"] = (
+    df_ue["responsable_institucional"]
+    .fillna("")
+    .astype(str)
+    .str.strip()
+)
+
+responsables = sorted([r for r in df_ue["responsable_institucional"].unique() if r])
 
 # ================================
 # 2) Filtro 1: Responsable Institucional
