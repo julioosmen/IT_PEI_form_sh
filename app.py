@@ -9,7 +9,6 @@ import pandas as pd
 
 from sharepoint_excel import (
     read_excel_sheet_from_sharepoint,
-    read_excel_sheet_from_sharepoint_ue,
     append_row_to_sharepoint_excel,
     norm_key,
 )
