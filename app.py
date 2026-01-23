@@ -269,7 +269,7 @@ if df_ue_filtrado.empty:
 opciones = [ 
     f"{str(row['codigo']).strip()} - {str(row['nombre']).strip()} - {str(row['departamento']).strip()}" for _, row in df_ue_filtrado.iterrows() ] 
 seleccion = st.selectbox( 
-    "Escriba o seleccione el código o nombre de la entidad", 
+    "Escriba o seleccione el código ue o nombre de la entidad", 
     opciones, 
     index=None, 
     placeholder="Escribe el código o nombre..." 
