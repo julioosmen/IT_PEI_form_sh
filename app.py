@@ -171,6 +171,9 @@ df_ue = cargar_unidades_ejecutoras()
 df_ue["codigo"] = df_ue["codigo"].astype(str).str.strip()
 df_ue["NG"] = df_ue["NG"].astype(str).str.strip()
 
+#df_ue_raw = read_excel_sheet_from_sharepoint(st.secrets)
+# 2) Adaptar columnas SharePoint -> estándar de la app
+#df_ue = adaptar_historial_sharepoint(historial_raw)
 
 # ================================
 # 1) Validar y preparar responsables
