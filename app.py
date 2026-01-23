@@ -9,6 +9,7 @@ import pandas as pd
 
 from sharepoint_excel import (
     read_excel_sheet_from_sharepoint,
+    read_excel_sheet_from_sharepoint_ue,
     append_row_to_sharepoint_excel,
     norm_key,
 )
@@ -169,6 +170,7 @@ def cargar_unidades_ejecutoras():
 df_ue = cargar_unidades_ejecutoras()
 df_ue["codigo"] = df_ue["codigo"].astype(str).str.strip()
 df_ue["NG"] = df_ue["NG"].astype(str).str.strip()
+
 
 # ================================
 # 1) Validar y preparar responsables
