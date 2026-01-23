@@ -72,32 +72,33 @@ def _graph_upload_file(token: str, site_id: str, file_path: str, content: bytes)
     r = requests.put(url, headers={"Authorization": f"Bearer {token}"}, data=content, timeout=120)
     r.raise_for_status()
 
-def read_excel_sheet_from_sharepoint_ue(secrets, sheet_name_ue: str | None = None) -> pd.DataFrame:
-    """
-    Descarga el Excel desde SharePoint y lee una hoja a DataFrame.
-    Usa configuración en secrets['sharepoint'].
-    """
-    sp = secrets["sharepoint"]
-    token = _graph_get_token(sp)
-    site_id = _graph_get_site_id(token, sp["site_hostname"], sp["site_path"])
-    content = _graph_download_file(token, site_id, sp["file_path"])
-    sn = sheet_name_ue or sp.get("sheet_name_ue")
-    if not sn:
-        raise ValueError("No se indicó sheet_name_ue y secrets['sharepoint'].sheet_name_ue no existe.")
-    return pd.read_excel(io.BytesIO(content), sheet_name_ue=sn, engine="openpyxl")   
+import io
+import pandas as pd
 
-def read_excel_sheet_from_sharepoint(secrets, sheet_name: str | None = None) -> pd.DataFrame:
+def read_excel_sheet_from_sharepoint(
+    secrets,
+    sheet_name: str | None = None,
+    sheet_key_in_secrets: str = "sheet_name",
+    file_path_key_in_secrets: str = "file_path",
+) -> pd.DataFrame:
     """
     Descarga el Excel desde SharePoint y lee una hoja a DataFrame.
-    Usa configuración en secrets['sharepoint'].
+    - sheet_name: nombre de hoja opcional (prioritario).
+    - sheet_key_in_secrets: clave en secrets['sharepoint'] donde está el nombre de hoja por defecto.
+    - file_path_key_in_secrets: clave en secrets['sharepoint'] donde está la ruta del archivo.
     """
     sp = secrets["sharepoint"]
+
     token = _graph_get_token(sp)
     site_id = _graph_get_site_id(token, sp["site_hostname"], sp["site_path"])
-    content = _graph_download_file(token, site_id, sp["file_path"])
-    sn = sheet_name or sp.get("sheet_name")
+    content = _graph_download_file(token, site_id, sp[file_path_key_in_secrets])
+
+    sn = sheet_name or sp.get(sheet_key_in_secrets)
     if not sn:
-        raise ValueError("No se indicó sheet_name y secrets['sharepoint'].sheet_name no existe.")
+        raise ValueError(
+            f"No se indicó sheet_name y secrets['sharepoint'].{sheet_key_in_secrets} no existe."
+        )
+
     return pd.read_excel(io.BytesIO(content), sheet_name=sn, engine="openpyxl")
 
 
