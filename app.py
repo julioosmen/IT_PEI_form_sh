@@ -287,9 +287,9 @@ if seleccion:
     fila = df_ue_filtrado[df_ue_filtrado["codigo"] == codigo]
 
     if not fila.empty:
-        sector = fila["sector"].iloc[0] if "sector" in fila.columns else ""
+        sector = fila["nombre_sector"].iloc[0] if "nombre_sector" in fila.columns else ""
         nivel_gob = fila["NG"].iloc[0]
-        responsable = fila["Responsable_Institucional"].iloc[0] if "Responsable_Institucional" in fila.columns else "No registrado"
+        responsable = fila["responsable_institucional"].iloc[0] if "responsable_institucional" in fila.columns else "No registrado"
 
         st.markdown(
             f"""
