@@ -8,7 +8,6 @@ import streamlit as st
 import pandas as pd
 
 from sharepoint_excel import (
-    read_excel_sheet_from_sharepoint_ue,
     read_excel_sheet_from_sharepoint,
     append_row_to_sharepoint_excel,
     norm_key,
@@ -163,15 +162,12 @@ def set_form_state_from_row(row: pd.Series):
 # =====================================
 # 🏛️ Carga y búsqueda de unidades ejecutoras
 # =====================================
-#@st.cache_data
-#def cargar_unidades_ejecutoras():
-#    return pd.read_excel("data/unidades_ejecutoras.xlsx", engine="openpyxl")
-#
-#df_ue = cargar_unidades_ejecutoras()
-#df_ue["codigo"] = df_ue["codigo"].astype(str).str.strip()
-#df_ue["NG"] = df_ue["NG"].astype(str).str.strip()
-
-df_ue_raw = read_excel_sheet_from_sharepoint_ue(st.secrets)
+#df_ue_raw = read_excel_sheet_from_sharepoint_ue(st.secrets)
+df_ue_raw = read_excel_sheet_from_sharepoint(
+    st.secrets,
+    sheet_name=None,
+    sheet_key_in_secrets="sheet_name_ue",
+)
 # 2) Adaptar columnas SharePoint -> estándar de la app
 df_ue = adaptar_historial_sharepoint(df_ue_raw)
 
@@ -339,7 +335,12 @@ if "modo" in st.session_state and seleccion:
     if st.session_state["modo"] == "historial":
         try:
             # 1) Leer historial desde SharePoint
-            historial_raw = read_excel_sheet_from_sharepoint(st.secrets)
+            #historial_raw = read_excel_sheet_from_sharepoint(st.secrets)
+            historial_raw = read_excel_sheet_from_sharepoint(
+                st.secrets,
+                sheet_name=None,
+                sheet_key_in_secrets="sheet_name",
+            )
             
             #st.write("Columnas RAW (SharePoint):", historial_raw.columns.tolist())
             #st.write("Columnas RAW normalizadas:", [norm_key(c) for c in historial_raw.columns.astype(str)])
