@@ -72,21 +72,7 @@ def _graph_upload_file(token: str, site_id: str, file_path: str, content: bytes)
     r = requests.put(url, headers={"Authorization": f"Bearer {token}"}, data=content, timeout=120)
     r.raise_for_status()
 
-
-def read_excel_sheet_from_sharepoint_ue(secrets, sheet_name: str | None = None) -> pd.DataFrame:
-    """
-    Descarga el Excel desde SharePoint y lee una hoja a DataFrame.
-    Usa configuración en secrets['sharepoint'].
-    """
-    sp = secrets["sharepoint"]
-    token = _graph_get_token(sp)
-    site_id = _graph_get_site_id(token, sp["site_hostname"], sp["site_path"])
-    content = _graph_download_file(token, site_id, sp["file_path"])
-    sn = sheet_name_ue or sp.get("sheet_name_ue")
-    if not sn:
-        raise ValueError("No se indicó sheet_name_ue y secrets['sharepoint'].sheet_name_ue no existe.")
-    return pd.read_excel(io.BytesIO(content), sheet_name_ue=sn, engine="openpyxl")
-    
+   
 def read_excel_sheet_from_sharepoint(secrets, sheet_name: str | None = None) -> pd.DataFrame:
     """
     Descarga el Excel desde SharePoint y lee una hoja a DataFrame.
