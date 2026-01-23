@@ -9,6 +9,7 @@ import pandas as pd
 
 from sharepoint_excel import (
     read_excel_sheet_from_sharepoint,
+    read_excel_sheet_from_sharepoint_ue,
     append_row_to_sharepoint_excel,
     norm_key,
 )
@@ -17,6 +18,9 @@ from adapters.historial_sharepoint import (
     adaptar_historial_sharepoint,
 )
 
+from validators import (
+    validar_formulario,
+)
 
 # =====================================
 # ✅ PARTE INTEGRADA
@@ -167,6 +171,7 @@ df_ue = cargar_unidades_ejecutoras()
 df_ue["codigo"] = df_ue["codigo"].astype(str).str.strip()
 df_ue["NG"] = df_ue["NG"].astype(str).str.strip()
 
+
 # ================================
 # 1) Validar y preparar responsables
 # ================================
@@ -264,9 +269,9 @@ if df_ue_filtrado.empty:
 
 # Crear opciones combinadas para búsqueda (solo del filtrado) 
 opciones = [ 
-    f"{str(row['codigo']).strip()} - {str(row['nombre']).strip()}" for _, row in df_ue_filtrado.iterrows() ] 
+    f"{str(row['codigo']).strip()} - {str(row['nombre']).strip()} - {str(row['departamento']).strip()}" for _, row in df_ue_filtrado.iterrows() ] 
 seleccion = st.selectbox( 
-    "Escriba o seleccione el código o nombre del pliego", 
+    "Escriba o seleccione el código ue o nombre de la entidad", 
     opciones, 
     index=None, 
     placeholder="Escribe el código o nombre..." 
@@ -333,8 +338,8 @@ if "modo" in st.session_state and seleccion:
             # 1) Leer historial desde SharePoint
             historial_raw = read_excel_sheet_from_sharepoint(st.secrets)
             
-            st.write("Columnas RAW (SharePoint):", historial_raw.columns.tolist())
-            st.write("Columnas RAW normalizadas:", [norm_key(c) for c in historial_raw.columns.astype(str)])
+            #st.write("Columnas RAW (SharePoint):", historial_raw.columns.tolist())
+            #st.write("Columnas RAW normalizadas:", [norm_key(c) for c in historial_raw.columns.astype(str)])
 
             # 2) Adaptar columnas SharePoint -> estándar de la app
             historial = adaptar_historial_sharepoint(historial_raw)
@@ -410,7 +415,7 @@ if "modo" in st.session_state and seleccion:
     # MODO: NUEVO
     # ================================
     elif st.session_state["modo"] == "nuevo":
-        st.subheader("📝 Crear nuevo registro PEI")
+        #st.subheader("📝 Crear nuevo registro PEI")
 
         init_form_state()
         form = st.session_state[FORM_STATE_KEY]
@@ -472,7 +477,7 @@ if "modo" in st.session_state and seleccion:
 
                 fecha_derivacion = st.date_input(
                     "Fecha de derivación",
-                    value=form["fecha_derivacion"] if form["fecha_derivacion"] else datetime.now().date()
+                    value=form.get("fecha_derivacion"),
                 )
 
             with col3:
@@ -523,12 +528,14 @@ if "modo" in st.session_state and seleccion:
             with colB:
                 fecha_it = st.date_input(
                     "Fecha de I.T",
-                    value=form["fecha_it"] if form["fecha_it"] else datetime.now().date()
+                    value=form.get("fecha_it"),   # None => vacío
                 )
+             
                 fecha_oficio = st.date_input(
                     "Fecha del Oficio",
-                    value=form["fecha_oficio"] if form["fecha_oficio"] else datetime.now().date()
+                    value=form.get("fecha_oficio"),  # None => vacío
                 )
+
 
             with colC:
                 numero_it = st.text_input("Número de I.T", value=form["numero_it"])
@@ -579,6 +586,12 @@ if "modo" in st.session_state and seleccion:
                     "numero_oficio": numero_oficio,
                 }
 
+                errores = validar_formulario(nuevo_sharepoint)
+                if errores:
+                    for e in errores:
+                        st.error(f"❌ {e}")
+                    st.stop()  # ⛔ corta y NO guarda        
+                
                 try:
                     append_row_to_sharepoint_excel(st.secrets, nuevo_sharepoint)
                     st.success("✅ Registro guardado en el historial.")
