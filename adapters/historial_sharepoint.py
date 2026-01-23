@@ -6,7 +6,7 @@ from sharepoint_excel import norm_key
 # Mapeo desde encabezados (normalizados) del Excel -> columnas estándar de la app
 EXCEL_NORM_TO_APP = {
     "id_ue": "codigo",
-    "nombre_unidad_ejecutora": "nombre",
+    "nombre_pliego": "nombre",
 
     "ano": "año",
     "anio": "año",
@@ -35,7 +35,7 @@ EXCEL_NORM_TO_APP = {
     "id_sector": "id_sector",
     "nombre_sector": "nombre_sector",
     "id_pliego": "id_pliego",
-    "nombre_pliego": "nombre_pliego",
+    "nombre_unidad_ejecutora": "nombre_unidad_ejecutora",
 
     "id_departamento": "id_departamento",
     "nombre_departamento": "nombre_departamento",
