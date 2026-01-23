@@ -254,9 +254,36 @@ if not resp_sel:
     st.stop()
 
 # ================================
+# 2.1) Filtro opcional: solo UE con PEI "En Proceso"
+# ================================
+solo_en_proceso = st.checkbox(
+    "Mostrar solo Unidades Ejecutoras con Estado_PEI = En Proceso",
+    value=False,
+)
+
+# Normaliza Estado_PEI si existe
+if "Estado_PEI" in df_ue.columns:
+    df_ue["Estado_PEI"] = (
+        df_ue["Estado_PEI"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+    )
+else:
+    # Si no existe la columna, no se puede aplicar el filtro
+    if solo_en_proceso:
+        st.warning("No se puede filtrar por Estado_PEI porque no existe la columna 'Estado_PEI' en el origen.")
+    solo_en_proceso = False
+
+# ================================
 # 3) Filtrar df_ue por responsable + Filtro 2: UE (código o nombre)
 # ================================
 df_ue_filtrado = df_ue[df_ue["responsable_institucional"] == resp_sel].copy() 
+
+if solo_en_proceso:
+    df_ue_filtrado = df_ue_filtrado[
+        df_ue_filtrado["Estado_PEI"].str.lower() == "en proceso"
+    ].copy()
 
 st.caption(f"Unidades ejecutoras asignadas: {len(df_ue_filtrado)}") 
 
