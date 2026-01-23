@@ -72,7 +72,7 @@ def _graph_upload_file(token: str, site_id: str, file_path: str, content: bytes)
     r = requests.put(url, headers={"Authorization": f"Bearer {token}"}, data=content, timeout=120)
     r.raise_for_status()
 
-def read_excel_sheet_from_sharepoint_ue(secrets, sheet_name: str | None = None) -> pd.DataFrame:
+def read_excel_sheet_from_sharepoint_ue(secrets, sheet_name_ue: str | None = None) -> pd.DataFrame:
     """
     Descarga el Excel desde SharePoint y lee una hoja a DataFrame.
     Usa configuración en secrets['sharepoint'].
