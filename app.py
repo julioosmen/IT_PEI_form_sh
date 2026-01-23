@@ -267,7 +267,7 @@ if df_ue_filtrado.empty:
 
 # Crear opciones combinadas para búsqueda (solo del filtrado) 
 opciones = [ 
-    f"{str(row['codigo']).strip()} - {str(row['nombre']).strip()}" for _, row in df_ue_filtrado.iterrows() ] 
+    f"{str(row['codigo']).strip()} - {str(row['nombre']).strip()} - {str(row['departamento']).strip()}" for _, row in df_ue_filtrado.iterrows() ] 
 seleccion = st.selectbox( 
     "Escriba o seleccione el código o nombre del pliego", 
     opciones, 
