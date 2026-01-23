@@ -8,6 +8,7 @@ import streamlit as st
 import pandas as pd
 
 from sharepoint_excel import (
+    read_excel_sheet_from_sharepoint_ue,
     read_excel_sheet_from_sharepoint,
     append_row_to_sharepoint_excel,
     norm_key,
@@ -170,7 +171,7 @@ def set_form_state_from_row(row: pd.Series):
 #df_ue["codigo"] = df_ue["codigo"].astype(str).str.strip()
 #df_ue["NG"] = df_ue["NG"].astype(str).str.strip()
 
-df_ue_raw = read_excel_sheet_from_sharepoint(st.secrets)
+df_ue_raw = read_excel_sheet_from_sharepoint_ue(st.secrets)
 # 2) Adaptar columnas SharePoint -> estándar de la app
 df_ue = adaptar_historial_sharepoint(df_ue_raw)
 
