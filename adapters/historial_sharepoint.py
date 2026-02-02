@@ -43,6 +43,10 @@ EXCEL_NORM_TO_APP = {
     "nombre_provincia": "nombre_provincia",
     "id_4distrito": "id_4distrito",
     "nombre_distrito": "nombre_distrito",
+
+    "idregistro": "id_registro",
+    "lastupdated": "last_updated",
+    "updatedby": "updated_by",
 }
 
 def adaptar_historial_sharepoint(df: pd.DataFrame) -> pd.DataFrame:
