@@ -180,3 +180,84 @@ def append_row_to_sharepoint_excel(secrets, row_by_app_key: dict) -> None:
 
     # 6) Inserta fila por Graph Excel API
     _excel_table_add_row(token, site_id, item_id, table_name, new_row)
+
+def _excel_table_get_all_values(token: str, site_id: str, item_id: str, table_name: str) -> list[list]:
+    # Devuelve matriz: [ [fila1...], [fila2...] ... ] (sin headers)
+    url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/items/{item_id}/workbook/tables/{table_name}/range"
+    r = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=60)
+    r.raise_for_status()
+    return r.json().get("values", [])
+
+def update_row_in_table_by_idregistro(
+    secrets,
+    updates_by_app_key: dict,
+    id_registro: str,
+    appkey_to_excelnorm: dict,
+) -> None:
+    """
+    Actualiza un registro existente en la tabla (SharePoint Excel) buscando por IdRegistro.
+    - updates_by_app_key: dict con claves técnicas del app (estado, comentario, etc.)
+    - id_registro: valor exacto de la columna IdRegistro de esa fila
+    - appkey_to_excelnorm: el mismo alias que ya usas para insertar (Opción A)
+    """
+    sp = secrets["sharepoint"]
+    table_name = sp.get("table_name")
+    if not table_name:
+        raise ValueError("Falta secrets['sharepoint'].table_name")
+
+    token = _graph_get_token(sp)
+    site_id = _graph_get_site_id(token, sp["site_hostname"], sp["site_path"])
+    item_id = _graph_get_drive_item_id(token, site_id, sp["file_path"])
+
+    headers = _excel_get_table_header_names(token, site_id, item_id, table_name)
+    headers_norm = [norm_key(h) for h in headers]
+
+    # datos actuales (matriz sin headers)
+    values = _excel_table_get_all_values(token, site_id, item_id, table_name)
+
+    # ubicar columna IdRegistro
+    if "idregistro" not in headers_norm:
+        raise ValueError("La tabla no tiene columna 'IdRegistro' (requerida para actualizar).")
+
+    id_col = headers_norm.index("idregistro")
+
+    # ubicar fila por IdRegistro
+    target_idx = None
+    for i, row in enumerate(values):
+        if i < len(values) and id_col < len(row) and str(row[id_col]).strip() == str(id_registro).strip():
+            target_idx = i
+            break
+
+    if target_idx is None:
+        raise ValueError(f"No se encontró IdRegistro={id_registro} en la tabla.")
+
+    # construir dict normalizado de updates
+    updates_norm = {}
+    for k, v in updates_by_app_key.items():
+        k0 = norm_key(k)
+        excel_norm = appkey_to_excelnorm.get(k0, k0)
+        updates_norm[excel_norm] = v
+
+    # armar nueva fila completa preservando lo existente
+    current = list(values[target_idx])
+    # asegurar largo correcto (por si excel devuelve menos columnas)
+    if len(current) < len(headers):
+        current += [""] * (len(headers) - len(current))
+
+    # aplicar updates a índices
+    for hn, v in updates_norm.items():
+        if hn in headers_norm:
+            current[headers_norm.index(hn)] = v
+
+    # escribir la fila completa usando rows/itemAt(index)/range
+    url = (
+        f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/items/{item_id}"
+        f"/workbook/tables/{table_name}/rows/itemAt(index={target_idx})/range"
+    )
+    r = requests.patch(
+        url,
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        json={"values": [current]},
+        timeout=60
+    )
+    r.raise_for_status()
