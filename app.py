@@ -584,8 +584,11 @@ if "modo" in st.session_state and seleccion:
                     "Expediente (SGD), Fecha de I.T y Número de I.T."
                 )
 
-            submitted = st.form_submit_button("💾 Guardar Registro")
-
+            #submitted = st.form_submit_button("💾 Guardar Registro")
+            editando = bool(st.session_state.get("id_registro"))
+            label_btn = "🔁 Actualizar registro" if editando else "💾 Guardar Registro"
+            submitted = st.form_submit_button(label_btn)
+            
             if submitted:
                 if estado == "Emitido" and not puede_emitir:
                     st.error("❌ No se puede guardar como 'Emitido'. Completa Expediente (SGD), Fecha de I.T y Número de I.T.")
