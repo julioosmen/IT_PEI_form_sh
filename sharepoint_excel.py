@@ -162,6 +162,10 @@ def append_row_to_sharepoint_excel(secrets, row_by_app_key: dict) -> None:
         "nombre_provincia": "nombre_provincia",
         "id_4distrito": "id_4distrito",
         "nombre_distrito": "nombre_distrito",
+
+        "id_registro": "idregistro",
+        "last_updated": "lastupdated",
+        "updated_by": "updatedby",
     }
 
     # 4) Construye diccionario normalizado con alias
