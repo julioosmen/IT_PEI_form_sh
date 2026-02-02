@@ -427,7 +427,10 @@ if "modo" in st.session_state and seleccion:
                 ultimo = df_historial.iloc[-1]
     
             st.success("Último registro encontrado.")
-    
+
+            # 8.5) Se agrega esta columna id_registro para fines de actualizar un registro             
+            st.session_state["id_registro"] = str(ultimo.get("id_registro", "")).strip()
+            
             # 9) Cargar último registro al formulario
             colx, coly = st.columns([1, 2])
             with colx:
