@@ -591,17 +591,27 @@ if "modo" in st.session_state and seleccion:
             editando = bool(st.session_state.get("id_registro"))
             label_btn = "🔁 Actualizar registro" if editando else "💾 Guardar Registro"
             submitted = st.form_submit_button(label_btn)
-            
+                        
             if submitted:
+                # ----------------------------
+                # 1) Reglas de bloqueo (ejemplo)
+                # ----------------------------
                 if estado == "Emitido" and not puede_emitir:
                     st.error("❌ No se puede guardar como 'Emitido'. Completa Expediente (SGD), Fecha de I.T y Número de I.T.")
                     st.stop()
-
+            
                 nombre_ue = seleccion.split(" - ")[1].strip()
-
-                # responsable ya viene del bloque de tarjeta, pero por seguridad:
                 responsable_actual = resp_sel
-
+            
+                # Fechas opcionales: vacías si None
+                def _date_str(d):
+                    return d.isoformat() if d else ""
+            
+                now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+                # ----------------------------
+                # 2) Dict técnico del app
+                # ----------------------------
                 nuevo_sharepoint = {
                     "codigo": codigo,
                     "nombre": nombre_ue,
@@ -612,29 +622,63 @@ if "modo" in st.session_state and seleccion:
                     "estado": estado,
                     "responsable_institucional": responsable_actual,
                     "cantidad_revisiones": cantidad_revisiones,
-                    "fecha_recepcion": str(fecha_recepcion),
-                    "fecha_derivacion": str(fecha_derivacion),
+                    "fecha_recepcion": _date_str(fecha_recepcion),
+                    "fecha_derivacion": _date_str(fecha_derivacion),
                     "etapa_revision": etapa_revision,
                     "comentario": comentario,
                     "articulacion": articulacion,
                     "expediente": expediente,
-                    "fecha_it": str(fecha_it),
+                    "fecha_it": _date_str(fecha_it),
                     "numero_it": numero_it,
-                    "fecha_oficio": str(fecha_oficio),
+                    "fecha_oficio": _date_str(fecha_oficio),
                     "numero_oficio": numero_oficio,
+            
+                    # Auditoría (nuevas columnas en Excel)
+                    "last_updated": now_str,
+                    "updated_by": resp_sel,
                 }
-
-                errores = validar_formulario(nuevo_sharepoint)
-                if errores:
-                    for e in errores:
-                        st.error(f"❌ {e}")
-                    st.stop()  # ⛔ corta y NO guarda        
-                
+            
+                # ----------------------------
+                # 3) Decisión: insertar o actualizar
+                # ----------------------------
+                editando = bool(st.session_state.get("id_registro"))
+            
                 try:
-                    append_row_to_sharepoint_excel(st.secrets, nuevo_sharepoint)
-                    st.success("✅ Registro guardado en el historial.")
+                    if editando:
+                        # Actualiza SOLO columnas permitidas (evita tocar campos "identidad")
+                        updates = {
+                            "estado": nuevo_sharepoint["estado"],
+                            "etapa_revision": nuevo_sharepoint["etapa_revision"],
+                            "comentario": nuevo_sharepoint["comentario"],
+                            "fecha_derivacion": nuevo_sharepoint["fecha_derivacion"],
+                            "articulacion": nuevo_sharepoint["articulacion"],
+                            "expediente": nuevo_sharepoint["expediente"],
+                            "fecha_it": nuevo_sharepoint["fecha_it"],
+                            "numero_it": nuevo_sharepoint["numero_it"],
+                            "fecha_oficio": nuevo_sharepoint["fecha_oficio"],
+                            "numero_oficio": nuevo_sharepoint["numero_oficio"],
+                            "last_updated": nuevo_sharepoint["last_updated"],
+                            "updated_by": nuevo_sharepoint["updated_by"],
+                        }
+            
+                        update_row_in_table_by_idregistro(
+                            st.secrets,
+                            updates_by_app_key=updates,
+                            id_registro=st.session_state["id_registro"],
+                            appkey_to_excelnorm=APPKEY_TO_EXCELNORM,  # Debe existir en sharepoint_excel.py
+                        )
+                        st.success("✅ Registro actualizado (sin crear fila nueva).")
+            
+                    else:
+                        # Crear nuevo: asigna UUID
+                        nuevo_sharepoint["id_registro"] = str(uuid4())
+                        append_row_to_sharepoint_excel(st.secrets, nuevo_sharepoint)
+                        st.success("✅ Registro guardado como fila nueva.")
+            
+                    # Limpieza y volver a historial
                     st.session_state["modo"] = "historial"
                     st.rerun()
+            
                 except Exception as e:
-                    st.error(f"❌ Error al guardar en el Excel: {e}")
+                    st.error(f"❌ Error al guardar/actualizar en SharePoint: {e}")
 
