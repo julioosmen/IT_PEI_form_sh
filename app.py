@@ -648,6 +648,7 @@ if "modo" in st.session_state and seleccion:
                         # Actualiza SOLO columnas permitidas (evita tocar campos "identidad")
                         updates = {
                             "estado": nuevo_sharepoint["estado"],
+                            "cantidad_revisiones": nuevo_sharepoint["cantidad_revisiones"],
                             "etapa_revision": nuevo_sharepoint["etapa_revision"],
                             "comentario": nuevo_sharepoint["comentario"],
                             "fecha_derivacion": nuevo_sharepoint["fecha_derivacion"],
