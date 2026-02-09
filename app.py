@@ -10,6 +10,7 @@ import pandas as pd
 from uuid import uuid4
 
 from sharepoint_excel import (
+    read_table_from_sharepoint_as_df,
     read_excel_sheet_from_sharepoint,
     append_row_to_sharepoint_excel,
     update_row_in_table_by_idregistro,
@@ -216,7 +217,7 @@ st.markdown(
 # 🏛️ Carga y búsqueda de unidades ejecutoras
 # =====================================
 #df_ue_raw = read_excel_sheet_from_sharepoint_ue(st.secrets)
-df_ue_raw = read_excel_sheet_from_sharepoint(
+df_ue_raw = read_table_from_sharepoint_as_df(
     st.secrets,
     sheet_name=None,
     sheet_key_in_secrets="sheet_name_ue",
@@ -364,7 +365,7 @@ if "modo" in st.session_state and seleccion:
         try:
             # 1) Leer historial desde SharePoint
             #historial_raw = read_excel_sheet_from_sharepoint(st.secrets)
-            historial_raw = read_excel_sheet_from_sharepoint(
+            historial_raw = read_table_from_sharepoint_as_df(
                 st.secrets,
                 sheet_name=None,
                 sheet_key_in_secrets="sheet_name",
