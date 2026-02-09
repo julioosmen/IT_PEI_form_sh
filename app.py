@@ -253,14 +253,14 @@ resp_sel = st.selectbox(
 )
 
 if not resp_sel:
-    st.info("Selecciona un responsable para habilitar la búsqueda de Unidades Ejecutoras.")
+    st.info("Selecciona un responsable para habilitar la búsqueda de Pliegos.")
     st.stop()
 
 # ================================
 # 2.1) Filtro opcional: solo UE con PEI "En Proceso"
 # ================================
 solo_en_proceso = st.checkbox(
-    "Mostrar solo Unidades Ejecutoras en proceso",
+    "Mostrar solo Pliegos en proceso",
     value=False,
 )
 
@@ -288,10 +288,10 @@ if solo_en_proceso:
         df_ue_filtrado["Estado_PEI"].str.lower() == "en proceso"
     ].copy()
 
-st.caption(f"Unidades ejecutoras asignadas: {len(df_ue_filtrado)}") 
+st.caption(f"Pliegos asignados: {len(df_ue_filtrado)}") 
 
 if df_ue_filtrado.empty: 
-    st.warning("No hay unidades ejecutoras asociadas a este responsable.") 
+    st.warning("No hay pliegos asociadas a este responsable.") 
     st.stop() 
 
 # Crear opciones combinadas para búsqueda (solo del filtrado) 
