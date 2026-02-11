@@ -231,13 +231,17 @@ st.markdown(
 )
 
 # =====================================
-# 🏛️ Carga y búsqueda de unidades ejecutoras
+# 🔐 Preparar conexión SharePoint (UNA VEZ POR RERUN)
 # =====================================
 sp = dict(st.secrets["sharepoint"])  # convertir a dict normal
 
 token = cached_graph_token(sp)
 site_id = cached_site_id(token, sp["site_hostname"], sp["site_path"])
 item_id = cached_item_id(token, site_id, sp["file_path"])
+
+# =====================================
+# 🏛️ Carga y búsqueda de unidades ejecutoras
+# =====================================
 
 df_ue_raw = read_table_from_sharepoint_as_df_with_ids(
     token,
@@ -388,12 +392,6 @@ if "modo" in st.session_state and seleccion:
     if st.session_state.get["modo"] == "historial":
         try:
             # 1) Leer historial desde SharePoint
-            sp = dict(st.secrets["sharepoint"])  # convertir a dict normal
-
-            token = cached_graph_token(sp)
-            site_id = cached_site_id(token, sp["site_hostname"], sp["site_path"])
-            item_id = cached_item_id(token, site_id, sp["file_path"])
-
             historial_raw = read_table_from_sharepoint_as_df_with_ids(
                 token,
                 site_id,
