@@ -102,6 +102,25 @@ def read_table_from_sharepoint_as_df(
 
     return df
 
+def read_table_from_sharepoint_as_df_with_ids(
+    token: str,
+    site_id: str,
+    item_id: str,
+    table_name: str,
+) -> pd.DataFrame:
+
+    url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/items/{item_id}/workbook/tables/{table_name}/range"
+    r = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=60)
+    r.raise_for_status()
+
+    values = r.json().get("values", [])
+    if not values:
+        return pd.DataFrame()
+
+    headers = [str(x).strip() for x in values[0]]
+    rows = values[1:]
+    return pd.DataFrame(rows, columns=headers)
+
 def append_row_to_sharepoint_excel(secrets, row_by_app_key: dict, table_name_key="table_name_hist") -> None:
     """
     Inserta una fila en la TABLA del Excel (SharePoint) usando headers reales.
