@@ -72,29 +72,33 @@ def _graph_upload_file(token: str, site_id: str, file_path: str, content: bytes)
     r = requests.put(url, headers={"Authorization": f"Bearer {token}"}, data=content, timeout=120)
     r.raise_for_status()
 
-def read_table_from_sharepoint_as_df(secrets, table_name_key="table_name") -> pd.DataFrame:
+def read_table_from_sharepoint_as_df(
+    secrets,
+    table_name: str | None = None,
+    table_name_key_in_secrets: str = "table_name",
+) -> pd.DataFrame:
     sp = secrets["sharepoint"]
     token = _graph_get_token(sp)
     site_id = _graph_get_site_id(token, sp["site_hostname"], sp["site_path"])
     item_id = _graph_get_drive_item_id(token, site_id, sp["file_path"])
 
-    table_name = sp.get(table_name_key)
-    if not table_name:
-        raise ValueError(f"Falta secrets['sharepoint'].{table_name_key}")
+    tn = table_name or sp.get(table_name_key_in_secrets)
+    if not tn:
+        raise ValueError(f"No se indicó table_name y secrets['sharepoint'].{table_name_key_in_secrets} no existe.")
 
-    url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/items/{item_id}/workbook/tables/{table_name}/range"
+    url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/drive/items/{item_id}/workbook/tables/{tn}/range"
     r = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=60)
     r.raise_for_status()
-    values = r.json().get("values", [])
 
+    values = r.json().get("values", [])
     if not values:
         return pd.DataFrame()
 
-    headers = [str(h).strip() for h in values[0]]
+    headers = [str(x).strip() for x in values[0]]
     rows = values[1:]
     df = pd.DataFrame(rows, columns=headers)
 
-    # limpia "Unnamed" si aparece
+    # limpia columnas tipo "Unnamed"
     df = df.loc[:, ~df.columns.astype(str).str.startswith("Unnamed")]
 
     return df
