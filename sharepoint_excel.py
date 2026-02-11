@@ -4,7 +4,6 @@ import unicodedata
 import requests
 import msal
 import pandas as pd
-from openpyxl import load_workbook
 
 def norm_key(s: str) -> str:
     s = "" if s is None else str(s).strip().lower()
@@ -102,33 +101,6 @@ def read_table_from_sharepoint_as_df(
     df = df.loc[:, ~df.columns.astype(str).str.startswith("Unnamed")]
 
     return df
-
-
-def read_excel_sheet_from_sharepoint(
-    secrets,
-    sheet_name: str | None = None,
-    sheet_key_in_secrets: str = "sheet_name",
-    file_path_key_in_secrets: str = "file_path",
-) -> pd.DataFrame:
-    """
-    Descarga el Excel desde SharePoint y lee una hoja a DataFrame.
-    - sheet_name: nombre de hoja opcional (prioritario).
-    - sheet_key_in_secrets: clave en secrets['sharepoint'] donde está el nombre de hoja por defecto.
-    - file_path_key_in_secrets: clave en secrets['sharepoint'] donde está la ruta del archivo.
-    """
-    sp = secrets["sharepoint"]
-
-    token = _graph_get_token(sp)
-    site_id = _graph_get_site_id(token, sp["site_hostname"], sp["site_path"])
-    content = _graph_download_file(token, site_id, sp[file_path_key_in_secrets])
-
-    sn = sheet_name or sp.get(sheet_key_in_secrets)
-    if not sn:
-        raise ValueError(
-            f"No se indicó sheet_name y secrets['sharepoint'].{sheet_key_in_secrets} no existe."
-        )
-
-    return pd.read_excel(io.BytesIO(content), sheet_name=sn, engine="openpyxl")
 
 def append_row_to_sharepoint_excel(secrets, row_by_app_key: dict, table_name_key="table_name_hist") -> None:
     """
