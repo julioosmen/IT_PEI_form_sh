@@ -18,7 +18,7 @@ def validar_formulario(datos: dict) -> list[str]:
             errores.append("Para Estado=Emitido debes completar Expediente (SGD).")
         if not str(datos.get("numero_it", "")).strip():
             errores.append("Para Estado=Emitido debes completar Número de I.T.")
-        if not str(datos.get("fecha_it", "")).strip():
+        if not datos.get("fecha_it"):
             errores.append("Para Estado=Emitido debes completar Fecha de I.T.")
 
     return errores
