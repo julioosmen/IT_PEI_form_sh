@@ -219,8 +219,7 @@ st.markdown(
 #df_ue_raw = read_excel_sheet_from_sharepoint_ue(st.secrets)
 df_ue_raw = read_table_from_sharepoint_as_df(
     st.secrets,
-    sheet_name=None,
-    sheet_key_in_secrets="sheet_name_ue",
+    table_name_key_in_secrets="table_name_ue",
 )
 # 2) Adaptar columnas SharePoint -> estándar de la app
 df_ue = adaptar_historial_sharepoint(df_ue_raw)
@@ -367,8 +366,7 @@ if "modo" in st.session_state and seleccion:
             #historial_raw = read_excel_sheet_from_sharepoint(st.secrets)
             historial_raw = read_table_from_sharepoint_as_df(
                 st.secrets,
-                sheet_name=None,
-                sheet_key_in_secrets="sheet_name",
+                table_name_key_in_secrets="table_name_hist",
             )
             
             #st.write("Columnas RAW (SharePoint):", historial_raw.columns.tolist())
