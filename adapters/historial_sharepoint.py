@@ -1,6 +1,5 @@
 import re
 import pandas as pd
-import pandas as pd
 from sharepoint_excel import norm_key
 
 # Mapeo desde encabezados (normalizados) del Excel -> columnas estándar de la app
