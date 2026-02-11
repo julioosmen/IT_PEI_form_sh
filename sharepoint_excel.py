@@ -130,8 +130,7 @@ def read_excel_sheet_from_sharepoint(
 
     return pd.read_excel(io.BytesIO(content), sheet_name=sn, engine="openpyxl")
 
-
-def append_row_to_sharepoint_excel(secrets, row_by_app_key: dict) -> None:
+def append_row_to_sharepoint_excel(secrets, row_by_app_key: dict, table_name_key="table_name_hist") -> None:
     """
     Inserta una fila en la TABLA del Excel (SharePoint) usando headers reales.
     Acepta claves técnicas del app (snake_case) y las traduce a los headers de Excel.
@@ -141,7 +140,7 @@ def append_row_to_sharepoint_excel(secrets, row_by_app_key: dict) -> None:
     site_id = _graph_get_site_id(token, sp["site_hostname"], sp["site_path"])
     item_id = _graph_get_drive_item_id(token, site_id, sp["file_path"])
 
-    table_name = sp.get("table_name")
+    table_name = sp.get(table_name_key)
     if not table_name:
         raise ValueError("Falta secrets['sharepoint'].table_name")
 
@@ -217,11 +216,14 @@ def _excel_table_get_all_values(token: str, site_id: str, item_id: str, table_na
     r.raise_for_status()
     return r.json().get("values", [])
 
+def update_row_in_table_by_idregistro(..., table_name_key="table_name_hist"):
+
 def update_row_in_table_by_idregistro(
     secrets,
     updates_by_app_key: dict,
     id_registro: str,
     appkey_to_excelnorm: dict,
+    table_name_key="table_name_hist", 
 ) -> None:
     """
     Actualiza un registro existente en la tabla (SharePoint Excel) buscando por IdRegistro.
@@ -230,7 +232,7 @@ def update_row_in_table_by_idregistro(
     - appkey_to_excelnorm: el mismo alias que ya usas para insertar (Opción A)
     """
     sp = secrets["sharepoint"]
-    table_name = sp.get("table_name")
+    table_name = sp.get(table_name_key)
     if not table_name:
         raise ValueError("Falta secrets['sharepoint'].table_name")
 
