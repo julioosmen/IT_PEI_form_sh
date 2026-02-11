@@ -389,7 +389,7 @@ if "modo" in st.session_state and seleccion:
     # ================================
     # MODO: HISTORIAL
     # ================================
-    if st.session_state.get["modo"] == "historial":
+    if st.session_state["modo"] == "historial":
         try:
             # 1) Leer historial desde SharePoint
             historial_raw = read_table_from_sharepoint_as_df_with_ids(
