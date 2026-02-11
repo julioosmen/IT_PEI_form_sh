@@ -14,6 +14,7 @@ from sharepoint_excel import (
     _graph_get_site_id,
     _graph_get_drive_item_id,
     read_table_from_sharepoint_as_df,
+    read_table_from_sharepoint_as_df_with_ids,
     append_row_to_sharepoint_excel,
     update_row_in_table_by_idregistro,
     norm_key,
@@ -238,10 +239,13 @@ token = cached_graph_token(sp)
 site_id = cached_site_id(token, sp["site_hostname"], sp["site_path"])
 item_id = cached_item_id(token, site_id, sp["file_path"])
 
-df_ue_raw = read_table_from_sharepoint_as_df(
-    st.secrets,
-    table_name_key_in_secrets="table_name_ue",
+df_ue_raw = read_table_from_sharepoint_as_df_with_ids(
+    token,
+    site_id,
+    item_id,
+    sp["table_name_ue"],
 )
+
 # 2) Adaptar columnas SharePoint -> estándar de la app
 df_ue = adaptar_historial_sharepoint(df_ue_raw)
 
@@ -390,11 +394,13 @@ if "modo" in st.session_state and seleccion:
             site_id = cached_site_id(token, sp["site_hostname"], sp["site_path"])
             item_id = cached_item_id(token, site_id, sp["file_path"])
 
-            historial_raw = read_table_from_sharepoint_as_df(
-                st.secrets,
-                table_name_key_in_secrets="table_name_hist",
+            historial_raw = read_table_from_sharepoint_as_df_with_ids(
+                token,
+                site_id,
+                item_id,
+                sp["table_name_hist"],
             )
-            
+
             #st.write("Columnas RAW (SharePoint):", historial_raw.columns.tolist())
             #st.write("Columnas RAW normalizadas:", [norm_key(c) for c in historial_raw.columns.astype(str)])
 
