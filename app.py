@@ -232,7 +232,12 @@ st.markdown(
 # =====================================
 # 🏛️ Carga y búsqueda de unidades ejecutoras
 # =====================================
-#df_ue_raw = read_excel_sheet_from_sharepoint_ue(st.secrets)
+sp = dict(st.secrets["sharepoint"])  # convertir a dict normal
+
+token = cached_graph_token(sp)
+site_id = cached_site_id(token, sp["site_hostname"], sp["site_path"])
+item_id = cached_item_id(token, site_id, sp["file_path"])
+
 df_ue_raw = read_table_from_sharepoint_as_df(
     st.secrets,
     table_name_key_in_secrets="table_name_ue",
@@ -379,7 +384,12 @@ if "modo" in st.session_state and seleccion:
     if st.session_state.get["modo"] == "historial":
         try:
             # 1) Leer historial desde SharePoint
-            #historial_raw = read_excel_sheet_from_sharepoint(st.secrets)
+            sp = dict(st.secrets["sharepoint"])  # convertir a dict normal
+
+            token = cached_graph_token(sp)
+            site_id = cached_site_id(token, sp["site_hostname"], sp["site_path"])
+            item_id = cached_item_id(token, site_id, sp["file_path"])
+
             historial_raw = read_table_from_sharepoint_as_df(
                 st.secrets,
                 table_name_key_in_secrets="table_name_hist",
