@@ -10,6 +10,9 @@ import pandas as pd
 from uuid import uuid4
 
 from sharepoint_excel import (
+    _graph_get_token,
+    _graph_get_site_id,
+    _graph_get_drive_item_id,
     read_table_from_sharepoint_as_df,
     append_row_to_sharepoint_excel,
     update_row_in_table_by_idregistro,
@@ -23,6 +26,20 @@ from adapters.historial_sharepoint import (
 from validators import (
     validar_formulario,
 )
+
+@st.cache_data(ttl=50 * 60)  # 50 min (token suele durar ~1h)
+def cached_graph_token(sp: dict) -> str:
+    # sp debe ser "hashable": Streamlit lo serializa; si falla, conviértelo a tuple(sorted(sp.items()))
+    return _graph_get_token(sp)
+
+@st.cache_data(ttl=24 * 60 * 60)  # 1 día (casi no cambia)
+def cached_site_id(token: str, site_hostname: str, site_path: str) -> str:
+    return _graph_get_site_id(token, site_hostname, site_path)
+
+@st.cache_data(ttl=24 * 60 * 60)  # 1 día (casi no cambia)
+def cached_item_id(token: str, site_id: str, file_path: str) -> str:
+    return _graph_get_drive_item_id(token, site_id, file_path)
+
 
 # =====================================
 # ✅ PARTE INTEGRADA
