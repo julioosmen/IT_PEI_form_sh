@@ -11,7 +11,6 @@ from uuid import uuid4
 
 from sharepoint_excel import (
     read_table_from_sharepoint_as_df,
-    read_excel_sheet_from_sharepoint,
     append_row_to_sharepoint_excel,
     update_row_in_table_by_idregistro,
     norm_key,
