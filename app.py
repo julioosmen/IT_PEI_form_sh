@@ -1,5 +1,4 @@
 import re
-import os
 import base64
 from datetime import datetime
 from textwrap import dedent
@@ -13,11 +12,9 @@ from sharepoint_excel import (
     _graph_get_token,
     _graph_get_site_id,
     _graph_get_drive_item_id,
-    read_table_from_sharepoint_as_df,
     read_table_from_sharepoint_as_df_with_ids,
     append_row_to_sharepoint_excel,
     update_row_in_table_by_idregistro,
-    norm_key,
 )
 
 from adapters.historial_sharepoint import (
@@ -40,6 +37,10 @@ def cached_site_id(token: str, site_hostname: str, site_path: str) -> str:
 @st.cache_data(ttl=24 * 60 * 60)  # 1 día (casi no cambia)
 def cached_item_id(token: str, site_id: str, file_path: str) -> str:
     return _graph_get_drive_item_id(token, site_id, file_path)
+
+@st.cache_data(ttl=180)
+def cached_table_df(token: str, site_id: str, item_id: str, table_name: str) -> pd.DataFrame:
+    return read_table_from_sharepoint_as_df_with_ids(token, site_id, item_id, table_name)
 
 
 # =====================================
@@ -182,6 +183,7 @@ def set_form_state_from_row(row: pd.Series):
 # st.image("logo.png", width=160)
 #"st.title("Registro de IT del Plan Estratégico Institucional (PEI)")
 
+@st.cache_data
 def get_image_base64(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
@@ -243,12 +245,7 @@ item_id = cached_item_id(token, site_id, sp["file_path"])
 # 🏛️ Carga y búsqueda de unidades ejecutoras
 # =====================================
 
-df_ue_raw = read_table_from_sharepoint_as_df_with_ids(
-    token,
-    site_id,
-    item_id,
-    sp["table_name_ue"],
-)
+df_ue_raw = cached_table_df(token, site_id, item_id, sp["table_name_ue"])
 
 # 2) Adaptar columnas SharePoint -> estándar de la app
 df_ue = adaptar_historial_sharepoint(df_ue_raw)
@@ -324,8 +321,15 @@ if df_ue_filtrado.empty:
     st.stop() 
 
 # Crear opciones combinadas para búsqueda (solo del filtrado) 
-opciones = [ 
-    f"{str(row['codigo']).strip()} - {str(row['nombre']).strip()} - {str(row['nombre_departamento']).strip()}" for _, row in df_ue_filtrado.iterrows() ] 
+df_ue_filtrado["__opt"] = (
+    df_ue_filtrado["codigo"].astype(str).str.strip()
+    + " - "
+    + df_ue_filtrado["nombre"].astype(str).str.strip()
+    + " - "
+    + df_ue_filtrado["nombre_departamento"].astype(str).str.strip()
+)
+
+opciones = df_ue_filtrado["__opt"].tolist()
 seleccion = st.selectbox( 
     "Escriba o seleccione el código ue o nombre de la entidad", 
     opciones, 
@@ -698,13 +702,27 @@ if "modo" in st.session_state and seleccion:
                             appkey_to_excelnorm=APPKEY_TO_EXCELNORM,  # Debe existir en sharepoint_excel.py
                         )
                         st.success("✅ Registro actualizado (sin crear fila nueva).")
-            
+                        cached_table_df.clear()
+
                     else:
+                        errores = validar_formulario({
+                            "periodo": periodo,
+                            "estado": estado,
+                            "expediente": expediente,
+                            "numero_it": numero_it,
+                            "fecha_it": fecha_it,  # date o None
+                        })
+                        if errores:
+                            for e in errores:
+                                st.error(f"❌ {e}")
+                            st.stop()
+
                         # Crear nuevo: asigna UUID
                         nuevo_sharepoint["id_registro"] = str(uuid4())
                         append_row_to_sharepoint_excel(st.secrets, nuevo_sharepoint)
                         st.success("✅ Registro guardado como fila nueva.")
-            
+                        cached_table_df.clear()
+
                     # Limpieza y volver a historial
                     st.session_state["modo"] = "historial"
                     st.rerun()
