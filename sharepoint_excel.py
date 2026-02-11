@@ -216,8 +216,6 @@ def _excel_table_get_all_values(token: str, site_id: str, item_id: str, table_na
     r.raise_for_status()
     return r.json().get("values", [])
 
-def update_row_in_table_by_idregistro(..., table_name_key="table_name_hist"):
-
 def update_row_in_table_by_idregistro(
     secrets,
     updates_by_app_key: dict,
