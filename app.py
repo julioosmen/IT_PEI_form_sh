@@ -251,6 +251,17 @@ df_ue_raw = cached_table_df(token, site_id, item_id, sp["table_name_ue"])
 df_ue = adaptar_historial_sharepoint(df_ue_raw)
 
 # ================================
+# 2.0) FILTRO BASE: solo filas con PEI = "S"
+# ================================
+if "PEI" not in df_ue.columns:
+    st.error("❌ Falta la columna 'PEI' en la tabla de Unidades Ejecutoras (table_name_ue).")
+    st.stop()
+
+df_ue["PEI"] = df_ue["PEI"].fillna("").astype(str).str.strip().str.upper()
+
+df_ue = df_ue[df_ue["PEI"] == "S"].copy()
+
+# ================================
 # 1) Validar y preparar responsables
 # ================================
 if "responsable_institucional" not in df_ue.columns:
