@@ -38,7 +38,7 @@ def cached_site_id(token: str, site_hostname: str, site_path: str) -> str:
 def cached_item_id(token: str, site_id: str, file_path: str) -> str:
     return _graph_get_drive_item_id(token, site_id, file_path)
 
-@st.cache_data(ttl=180)
+@st.cache_data(ttl=180, show_spinner=False)
 def cached_table_df(token: str, site_id: str, item_id: str, table_name: str) -> pd.DataFrame:
     return read_table_from_sharepoint_as_df_with_ids(token, site_id, item_id, table_name)
 
